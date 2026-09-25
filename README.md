@@ -1,4 +1,5 @@
 
+
 ## Feature 4: Dynamic Library Analysis
 
 ### 1. Position-Independent Code (-fPIC)
@@ -22,3 +23,5 @@
 
 ### 3. Symbol Inspection (`nm`)
 Running `nm bin/client_static` displays defined text symbols (`T`) for custom library functions such as `mystrlen`. This proves that static linking copies the actual code of referenced functions directly into the final executable binary at build time.
+
+
