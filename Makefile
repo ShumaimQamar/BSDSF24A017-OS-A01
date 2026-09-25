@@ -1,35 +1,22 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Iinclude
-PICFLAGS = -fPIC
 
-LIBDIR = lib
-OBJDIR = obj
-BINDIR = bin
+# The first target is the default target when you run 'make'
+all: client
 
-DYNAMIC_LIB = $(LIBDIR)/libmyutils.so
-TARGET = $(BINDIR)/client_dynamic
+# Rule to compile the client executable
+client: src/main.c src/mystrfunctions.c src/myfilefunctions.c
+	$(CC) $(CFLAGS) $^ -o client
 
-all: directories $(DYNAMIC_LIB) $(TARGET)
+# Installation paths
+PREFIX ?= /usr/local
+BINDIR = $(PREFIX)/bin
+MANDIR = $(PREFIX)/share/man/man1
 
-directories:
-	mkdir -p $(LIBDIR) $(OBJDIR) $(BINDIR)
+.PHONY: all install
 
-$(OBJDIR)/mystrfunctions.o: src/mystrfunctions.c include/mystrfunctions.h
-	$(CC) $(CFLAGS) $(PICFLAGS) -c src/mystrfunctions.c -o $(OBJDIR)/mystrfunctions.o
-
-$(OBJDIR)/myfilefunctions.o: src/myfilefunctions.c include/myfilefunctions.h
-	$(CC) $(CFLAGS) $(PICFLAGS) -c src/myfilefunctions.c -o $(OBJDIR)/myfilefunctions.o
-
-$(DYNAMIC_LIB): $(OBJDIR)/mystrfunctions.o $(OBJDIR)/myfilefunctions.o
-	$(CC) -shared $(OBJDIR)/mystrfunctions.o $(OBJDIR)/myfilefunctions.o -o $(DYNAMIC_LIB)
-
-$(OBJDIR)/main.o: src/main.c include/mystrfunctions.h include/myfilefunctions.h
-	$(CC) $(CFLAGS) -c src/main.c -o $(OBJDIR)/main.o
-
-$(TARGET): $(OBJDIR)/main.o $(DYNAMIC_LIB)
-	$(CC) $(OBJDIR)/main.o -L$(LIBDIR) -lmyutils -o $(TARGET)
-
-clean:
-	rm -rf $(OBJDIR) $(LIBDIR) $(BINDIR)
-
-.PHONY: all clean directories
+install: client
+	install -d $(DESTDIR)$(BINDIR)
+	install -d $(DESTDIR)$(MANDIR)
+	install -m 755 client $(DESTDIR)$(BINDIR)/client
+	install -m 644 man/man3/*.1 $(DESTDIR)$(MANDIR)/
