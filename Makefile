@@ -1,31 +1,32 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Iinclude
+PICFLAGS = -fPIC
 
 LIBDIR = lib
 OBJDIR = obj
 BINDIR = bin
 
-STATIC_LIB = $(LIBDIR)/libmyutils.a
-TARGET = $(BINDIR)/client_static
+DYNAMIC_LIB = $(LIBDIR)/libmyutils.so
+TARGET = $(BINDIR)/client_dynamic
 
-all: directories $(STATIC_LIB) $(TARGET)
+all: directories $(DYNAMIC_LIB) $(TARGET)
 
 directories:
 	mkdir -p $(LIBDIR) $(OBJDIR) $(BINDIR)
 
-$(OBJDIR)/mystrfunctions.o: src/mystrfunctions.c
-	$(CC) $(CFLAGS) -c src/mystrfunctions.c -o $(OBJDIR)/mystrfunctions.o
+$(OBJDIR)/mystrfunctions.o: src/mystrfunctions.c include/mystrfunctions.h
+	$(CC) $(CFLAGS) $(PICFLAGS) -c src/mystrfunctions.c -o $(OBJDIR)/mystrfunctions.o
 
-$(OBJDIR)/myfilefunctions.o: src/myfilefunctions.c
-	$(CC) $(CFLAGS) -c src/myfilefunctions.c -o $(OBJDIR)/myfilefunctions.o
+$(OBJDIR)/myfilefunctions.o: src/myfilefunctions.c include/myfilefunctions.h
+	$(CC) $(CFLAGS) $(PICFLAGS) -c src/myfilefunctions.c -o $(OBJDIR)/myfilefunctions.o
 
-$(OBJDIR)/main.o: src/main.c
+$(DYNAMIC_LIB): $(OBJDIR)/mystrfunctions.o $(OBJDIR)/myfilefunctions.o
+	$(CC) -shared $(OBJDIR)/mystrfunctions.o $(OBJDIR)/myfilefunctions.o -o $(DYNAMIC_LIB)
+
+$(OBJDIR)/main.o: src/main.c include/mystrfunctions.h include/myfilefunctions.h
 	$(CC) $(CFLAGS) -c src/main.c -o $(OBJDIR)/main.o
 
-$(STATIC_LIB): $(OBJDIR)/mystrfunctions.o $(OBJDIR)/myfilefunctions.o
-	ar rcs $(STATIC_LIB) $(OBJDIR)/mystrfunctions.o $(OBJDIR)/myfilefunctions.o
-
-$(TARGET): $(OBJDIR)/main.o $(STATIC_LIB)
+$(TARGET): $(OBJDIR)/main.o $(DYNAMIC_LIB)
 	$(CC) $(OBJDIR)/main.o -L$(LIBDIR) -lmyutils -o $(TARGET)
 
 clean:
